@@ -1,22 +1,22 @@
-var express = require('express');
-var router = express.Router();
-var request = require('request');
-var goodGuyLib = require('good-guy-http');
+const express = require('express');
+const router = express.Router();
+const request = require('request');
+const goodGuyLib = require('good-guy-http');
+const jp = require('jsonpath');
 
 router.get('/:isbn', function (req, res, next) {
-    var goodGuy = goodGuyLib({
-        cache: goodGuyLib.inMemoryCache(10),
+    const goodGuy = goodGuyLib({
         maxRetries: 3,
     });
-    
-    var responseBody;
+
     goodGuy('https://book-catalog-proxy-4.herokuapp.com/book?isbn=' + req.param('isbn')).then(function (response) {
 
-        responseBody = JSON.parse(response.body);
-        var bookInfo = responseBody.items[0].volumeInfo;
+        let responseBody = JSON.parse(response.body);
+        let title = jp.value(responseBody, '$..title');
+        let cover = jp.value(responseBody, '$..thumbnail');
         res.render('index', {
-            title: bookInfo.title,
-            cover: bookInfo.imageLinks.thumbnail
+            title: title,
+            cover: cover
         });
     }).catch(next);
 });
